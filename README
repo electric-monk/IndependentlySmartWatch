@@ -1,0 +1,19 @@
+This is my custom firmware for the MetaWatch.
+
+Presently it's just FreeRTOS and the minimal stuff from the MetaWatch firmware to access hardware (some of their HAL, basically).
+
+Also included is btstack and some glue I wrote to try and make it work. It does seem to be working currently, I'm able to scan for devices, or go into discoverable mode and be discovered by other devices. I did have some issues getting it working with FreeRTOS getting stuck in loops or the chip not responding, so there may still be issues.
+
+To make btstack work, you must run convert_bts_init_scripts.py to turn bluetooth_init_cc2560_2.44.bts into bluetooth_init_cc2560_2.44.c before the project will build.
+
+Also, currently there is no charging of the battery, and the CPU will run flat-out.
+
+Todo list:
+- Make sure btstack is working nicely
+- Enable low power modes (perhaps involving removing FreeRTOS timers)
+- Add a GUI library to "System"
+- Add high level abstraction of all sensors/etc. to "System"
+- Some nice watch faces/stopwatch/sleep monitor/etc. to "Applications"
+
+Colin Munro
+http://tattiebogle.net/
