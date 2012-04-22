@@ -13,6 +13,7 @@
 #include "hal_accelerometer.h"
 #include "hal_vibe.h"
 #include "hal_lcd.h"
+#include "hal_dma.h"
 
 #include "bttask.h"
 
@@ -21,6 +22,16 @@
 #include <stdio.h>
 
 #include "colindebug.h"
+
+void* malloc(size_t _size)
+{
+	return pvPortMalloc(_size);
+}
+
+void free(void *p)
+{
+	vPortFree(p);
+}
 
 static void ConfigureHardware(void)
 {
@@ -58,6 +69,7 @@ void main(void)
 
 	ConfigureHardware();
 
+	InitialiseDMA();
 	InitializeRealTimeClock();
 	ConfigureBatteryPins();
 	InitAccelerometerPeripheral();

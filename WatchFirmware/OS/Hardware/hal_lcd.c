@@ -1,9 +1,12 @@
 #include "hal_board_type.h"
 #include "hal_lcd.h"
 #include "hal_clock_control.h"
+#include "hal_dma.h"
 
 #define SPI_PRESCALE_L   0x10
 #define SPI_PRESCALE_H   0x00
+
+unsigned short LcdDmaBusy;
 
 void StartLcd(void)
 {
@@ -34,16 +37,16 @@ void StartLcd(void)
 
 	/* remove reset */
 	LCD_SPI_UCBxCTL1 &= ~UCSWRST;
+
+	LcdDmaBusy = 0;
+
+	SetDMAHandler(2, LcdDMAComplete);
 }
 
-void WriteLcd(unsigned char* pData,unsigned char Size)
+void WriteLcd(unsigned char* pData,unsigned int Size, int async)
 {
   EnableSmClkUser(LCD_USER);
   LCD_CS_ASSERT();
-
-#ifdef DMA
-
-  DEBUG4_PULSE();
 
   LcdDmaBusy = 1;
 
@@ -52,11 +55,10 @@ void WriteLcd(unsigned char* pData,unsigned char Size)
    */
   DMACTL1 = DMA2TSEL_19;
 
-  __data16_write_addr((unsigned short) &DMA2SA,(unsigned long) pData);
+  __data16_write_addr((unsigned short) &DMA2SA, (unsigned long)pData);
+  __data16_write_addr((unsigned short) &DMA2DA, (unsigned long)&LCD_SPI_UCBxTXBUF);
 
-  __data16_write_addr((unsigned short) &DMA2DA,(unsigned long) &LCD_SPI_UCBxTXBUF);
-
-  DMA2SZ = (unsigned int)Size;
+  DMA2SZ = Size;
 
   /*
    * single transfer, increment source address, source byte and dest byte,
@@ -67,29 +69,29 @@ void WriteLcd(unsigned char* pData,unsigned char Size)
   /* start the transfer */
   DMA2CTL |= DMAEN;
 
-  while(LcdDmaBusy);
-
-#else
-  unsigned char Index;
-  for ( Index = 0; Index < Size; Index++ )
-  {
-    LCD_SPI_UCBxTXBUF = pData[Index];
-    while (!(LCD_SPI_UCBxIFG&UCTXIFG));
-  }
-
-#endif
-
-  /* wait for shift to complete ( ~3 us ) */
-  while( (LCD_SPI_UCBxSTAT & 0x01) != 0 );
-
-  /* now the chip select can be deasserted */
-  LCD_CS_DEASSERT();
-  DisableSmClkUser(LCD_USER);
-
+  if (!async)
+	  WaitForLcd();
 }
 
-void ClearLcd(void)
+void ClearLcd(int async)
 {
 	unsigned char command[LCD_CLEAR_CMD_SIZE] = {LCD_CLEAR_CMD, 0, 0};
-	WriteLcd(command, sizeof(command));
+	WriteLcd(command, sizeof(command), async);
+}
+
+void WaitForLcd(void)
+{
+	while (LcdDmaBusy);
+}
+
+void LcdDMAComplete(int channel)
+{
+	/* wait for shift to complete ( ~3 us ) */
+	while( (LCD_SPI_UCBxSTAT & 0x01) != 0 );
+
+	/* now the chip select can be deasserted */
+	LCD_CS_DEASSERT();
+	DisableSmClkUser(LCD_USER);
+
+	LcdDmaBusy = 0;
 }
