@@ -58,8 +58,6 @@
 
 //extern volatile unsigned short usCriticalNesting;
 //extern volatile unsigned portBASE_TYPE uxSchedulerSuspended;
-volatile unsigned portBASE_TYPE bigMonkey = 0;
-void puts(char*);
 
 /*-----------------------------------------------------------
  * PUBLIC LIST API documented in list.h
@@ -96,12 +94,6 @@ void vListInsertEnd( xList *pxList, xListItem *pxNewListItem )
 {
 volatile xListItem * pxIndex;
 
-bigMonkey++;
-//if ((usCriticalNesting == 0) && (uxSchedulerSuspended == 0))
-if (bigMonkey > 1)
-{
-	puts("Shenanigan");
-}
 	/* Insert a new list item into pxList, but rather than sort the list,
 	makes the new list item the last item to be removed by a call to
 	pvListGetOwnerOfNextEntry.  This means it has to be the item pointed to by
@@ -118,7 +110,6 @@ if (bigMonkey > 1)
 	pxNewListItem->pvContainer = ( void * ) pxList;
 
 	( pxList->uxNumberOfItems )++;
-bigMonkey--;
 }
 /*-----------------------------------------------------------*/
 
@@ -127,12 +118,6 @@ void vListInsert( xList *pxList, xListItem *pxNewListItem )
 volatile xListItem *pxIterator;
 portTickType xValueOfInsertion;
 
-bigMonkey++;
-//if ((usCriticalNesting == 0) && (uxSchedulerSuspended == 0))
-if (bigMonkey > 1)
-{
-	puts("Shenanigan");
-}
 	/* Insert the new list item into the list, sorted in ulListItem order. */
 	xValueOfInsertion = pxNewListItem->xItemValue;
 
@@ -182,7 +167,6 @@ if (bigMonkey > 1)
 	pxNewListItem->pvContainer = ( void * ) pxList;
 
 	( pxList->uxNumberOfItems )++;
-bigMonkey--;
 }
 /*-----------------------------------------------------------*/
 
@@ -190,13 +174,6 @@ void vListRemove( xListItem *pxItemToRemove )
 {
 xList * pxList;
 
-bigMonkey++;
-//if ((usCriticalNesting == 0) && (uxSchedulerSuspended == 0))
-//if (bigMonkey > 1)
-if (pxItemToRemove->pvContainer==NULL)
-{
-	puts("Shenanigan");
-}
 	pxItemToRemove->pxNext->pxPrevious = pxItemToRemove->pxPrevious;
 	pxItemToRemove->pxPrevious->pxNext = pxItemToRemove->pxNext;
 	
@@ -212,7 +189,6 @@ if (pxItemToRemove->pvContainer==NULL)
 
 	pxItemToRemove->pvContainer = NULL;
 	( pxList->uxNumberOfItems )--;
-bigMonkey--;
 }
 /*-----------------------------------------------------------*/
 

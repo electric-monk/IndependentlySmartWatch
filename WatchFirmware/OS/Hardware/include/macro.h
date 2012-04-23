@@ -29,20 +29,15 @@
 
 /*! Save the interrupt state and disable interrutps */
 #define ENTER_CRITICAL_REGION_QUICK() \
-  { int quick = __get_interrupt_state(); __disable_interrupt();
+  { int quick = __get_interrupt_state(); __disable_interrupt(); asm("    nop");
 
 /*! Restore saved interrupt state */
 #define LEAVE_CRITICAL_REGION_QUICK() __set_interrupt_state(quick); }
 
 
-/*! DisableFlow comes from SerialPortProfile */
-extern void DisableFlow(void);
-/*! EnableFlow comes from serial port profile */
-extern void EnableFlow(void);
-
 /*! Save interrupt state, disable interrupts, and disable flow from bluetooth serial port */
 #define ENTER_CRITICAL_REGION_SLOW() \
-  { int slow = __get_interrupt_state(); DisableFlow(); __disable_interrupt();
+  { int slow = __get_interrupt_state(); DisableFlow(); __disable_interrupt(); asm("    nop");
 
 
 /*! Restore interrupt state and enable flow from bluetooth serial port */

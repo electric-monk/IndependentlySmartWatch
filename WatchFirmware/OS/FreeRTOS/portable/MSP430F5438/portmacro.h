@@ -93,10 +93,8 @@
 /*-----------------------------------------------------------*/	
 
 /* Interrupt control macros. */
-//#define portDISABLE_INTERRUPTS()	_disable_interrupt()
-//#define portENABLE_INTERRUPTS()		_enable_interrupt()
-#define portDISABLE_INTERRUPTS()	{asm("    dint"); asm("    nop");}
-#define portENABLE_INTERRUPTS()		{asm("    eint");}
+#define portDISABLE_INTERRUPTS()	_disable_interrupt(); _nop()
+#define portENABLE_INTERRUPTS()		_enable_interrupt()
 
 /*-----------------------------------------------------------*/
 
@@ -149,6 +147,10 @@ extern void vPortYield( void );
 #define portTICK_RATE_MS			( ( portTickType ) 1000 / configTICK_RATE_HZ )	
 #define portNOP()					__no_operation()	
 /*-----------------------------------------------------------*/
+
+
+#define portSET_INTERRUPT_MASK_FROM_ISR()		(_get_SR_register() & 0x08); _disable_interrupts(); _nop()
+#define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	if (x) _enable_interrupts()
 
 /* Task function macros as described on the FreeRTOS.org WEB site. */
 #define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
