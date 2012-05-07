@@ -89,3 +89,14 @@ void DisableVibratorPwm(void)
   STOP_VIBE_PWM_TIMER();
 }
 
+#pragma vector=TIMER1_A1_VECTOR    /* 0xFFE0 */
+__interrupt void isrTimer1A1(void)
+{
+	// Does nothing
+}
+
+#pragma vector=TIMER1_A0_VECTOR    /* 0xFFE2 */
+__interrupt void isrTimer1A0(void)
+{
+	// Does nothing
+}

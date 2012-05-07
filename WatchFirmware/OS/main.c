@@ -53,13 +53,14 @@ static void ConfigureHardware(void)
   CONFIG_ACCELEROMETER_PINS_FOR_SLEEP();
 
 }
-
+unsigned short reason;
 void main(void)
 {
 	/* Turn off the watchdog timer */
 	WDTCTL = WDTPW + WDTHOLD;
 
 	/* clear reason for reset */
+	reason = SYSRSTIV;
 	SYSRSTIV = 0;
 
 	/* disable DMA during read-modify-write cycles */
@@ -79,26 +80,36 @@ void main(void)
 
 	InitialiseSystem();
 	// TODO: Initiate tasks (Video driver, actual interface)
-	goodprintf("Startup: %i bytes free\n", (int)xPortGetFreeHeapSize());
+	goodprintf("Startup: %i bytes free, restart reason %04x\n", (int)xPortGetFreeHeapSize(), (int)reason);
+#ifdef _COLIN_DEBUG
+	ENABLE_LCD_LED();
+#endif
 	vTaskStartScheduler();
 }
 
 void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskName )
 {
-
+	goodprintf("Task '%s' stack overflow\n", pcTaskName);
 }
 
 void vApplicationMallocFailedHook(size_t xWantedSize)
 {
+	goodprintf("Malloc failed for %i bytes\n", xWantedSize);
 }
 
 void vApplicationIdleHook(void)
 {
-	// TODO: Check here it's safe to go to sleep
-
-    /* Call MSP430 Utility function to enable low power mode 3.     */
-    /* Put OS and Processor to sleep. Will need an interrupt        */
-    /* to wake us up from here.   */
-//    MSP430_LPM_ENTER();
-
+	if (vTasksBusy() == 0)
+	{
+	    /* Call MSP430 Utility function to enable low power mode 3.     */
+		/* Put OS and Processor to sleep. Will need an interrupt        */
+		/* to wake us up from here.   */
+#ifdef _COLIN_DEBUG
+		DISABLE_LCD_LED();
+#endif
+		MSP430_LPM_ENTER();
+#ifdef _COLIN_DEBUG
+		ENABLE_LCD_LED();
+#endif
+	}
 }

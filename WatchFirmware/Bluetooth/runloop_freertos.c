@@ -1,7 +1,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
-#include <timers.h>
+#include "Timer.h"
 
 #include "btstack/config.h"
 #include "btstack/run_loop_private.h"
@@ -15,10 +15,12 @@
 static xQueueHandle s_queue;
 static linked_list_t s_data_sources;
 
-static void TimerCallback(xTimerHandle timer)
+static int HandleTimer(TimerHandle timer, void *context)
 {
-	timer_source_t *source = pvTimerGetTimerID(timer);
-	xQueueSend(s_queue, &source, portMAX_DELAY);
+	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+	timer_source_t *source = (timer_source_t*)context;
+	xQueueSendFromISR(s_queue, &source, &xHigherPriorityTaskWoken);
+	return xHigherPriorityTaskWoken;
 }
 
 void embedded_trigger()
@@ -66,17 +68,16 @@ static int freertos_remove_data_source(data_source_t *ds)
 
 static void freertos_add_timer(timer_source_t *timer)
 {
-	xTimerHandle newTimer = xTimerCreate("runloop_timer", timer->timeout, 0, timer, TimerCallback);
+	TimerHandle newTimer = Timer_Create(HandleTimer, timer, timer->timeout, 0);
 	// Hack: Same as in btstack's Cocoa runloop
 	timer->item.next = (struct linked_item*)newTimer;
-	xTimerStart(newTimer, portMAX_DELAY);
 }
 
 static int freertos_remove_timer(timer_source_t *timer)
 {
 	if (timer->item.next == NULL)
 		return 0;
-	xTimerDelete((xTimerHandle)timer->item.next, 0);
+	Timer_Destroy((TimerHandle)timer->item.next);
 	timer->item.next = NULL;
 	return 0;
 }
@@ -101,7 +102,7 @@ static void freertos_execute(void)
 			}
 			else
 			{
-				goodprintf("Timer 0x%08x fired\n", message);
+//				goodprintf("Timer 0x%08x fired\n", message);
 				message->process(message);
 			}
 		}

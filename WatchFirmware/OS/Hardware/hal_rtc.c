@@ -29,6 +29,9 @@
 #include "hal_lpm.h"
 #include "hal_calibration.h"
 #include "macro.h"
+#include "colindebug.h"
+
+#include "Timer.h"
 
 /** Real Time Clock interrupt Flag definitions */
 #define RTC_NO_INTERRUPT      ( 0 )
@@ -40,12 +43,10 @@
 
 #define RTCCAL_VALUE_MASK ( 0x3f )
 
-static unsigned char RtcInUseMask;
-
 void InitializeRealTimeClock( void )
 {
-  RtcInUseMask = 0;
-  
+	Timer_Initialise();
+
   // stop it
   RTCCTL01 = RTCHOLD;
 
@@ -100,7 +101,6 @@ void InitializeRealTimeClock( void )
 
   // Enable the RTC
   RTCCTL01 &= ~RTCHOLD;  
-  
 }
 
 
@@ -151,114 +151,40 @@ void halRtcGet(RTC_DATA* pRtcData)
 
 }
 
-
-
-void EnableRtcPrescaleInterruptUser(unsigned char UserMask)
+void SetRTCPrescaleInterrupt(int enable)
 {
-  ENTER_CRITICAL_REGION_QUICK();
-   
-  // If not currently enabled, enable the timer ISR
-  if( RtcInUseMask == 0 )
-  {
-    RTCPS0CTL |= RT0PSIE;
-  }
-  
-  RtcInUseMask |= UserMask;
-   
-  LEAVE_CRITICAL_REGION_QUICK();
-
+	ENTER_CRITICAL_REGION_QUICK();
+	if (enable)
+		RTCPS0CTL |= RT0PSIE;
+	else
+		RTCPS0CTL &= ~RT0PSIE;
+	LEAVE_CRITICAL_REGION_QUICK();
 }
 
-void DisableRtcPrescaleInterruptUser(unsigned char UserMask)
+int GetRTCPrescaleInterruptEnabled(void)
 {
-
-  ENTER_CRITICAL_REGION_QUICK();
-  
-  RtcInUseMask &= ~UserMask;
-      
-  // If there are no more users, disable the interrupt
-  if( RtcInUseMask == 0 )
-  {
-    RTCPS0CTL &= ~RT0PSIE;
-  }
-  
-  LEAVE_CRITICAL_REGION_QUICK();
-
+	return RTCPS0CTL & RT0PSIE;
 }
 
-unsigned char QueryRtcUserActive(unsigned char UserMask)
-{
-  return RtcInUseMask & UserMask;
-}
-
-
-static unsigned char DivideByFour = 0;
-
-/*! Real Time Clock interrupt handler function.
- *
- *  Used for system timing.  When the processor is in low power mode, the RTC
- *  is the only timer running so we use it as a system timer.  There are two
- *  different timers.  RTC prescale one occurs at a 32 Hz rate and is enabled
- *  as needed.  The RTC Ready event occurs at 1 ppS and is always enabled.
- *
- * don't exit LPM3 unless it is required
- */
 #pragma vector = RTC_VECTOR
 __interrupt void RTC_ISR(void)
 {
-  unsigned char ExitLpm = 0;
-  
+	unsigned char ExitLpm = 0;
+
   // compiler intrinsic, value must be even, and in the range of 0 to 10
-  switch(__even_in_range(RTCIV,10))
+  switch(__even_in_range(RTCIV,0xa))
   {
   case RTC_NO_INTERRUPT: break;
   case RTC_RDY_IFG:      break;
   case RTC_EV_IFG:       break;
   case RTC_A_IFG:        break;
 
-  case RTC_PRESCALE_ZERO_IFG:
-
-#ifdef BLASTER
-    RouteCommandFromIsr(BlasterCmd);
-    ExitLpm = 1;    
-#endif
-    
-    // divide by four to get 32 Hz
-    if ( DivideByFour >= 4-1 )
-    {
-      DivideByFour = 0;
-           
-      if( QueryRtcUserActive(RTC_TIMER_VIBRATION) )
-      {
-//        RouteCommandFromIsr(VibrationState);
-        ExitLpm = 1;
-      }
-
-      if( QueryRtcUserActive(RTC_TIMER_BUTTON) )
-      {
-//        RouteCommandFromIsr(ButtonState);
-        ExitLpm = 1;
-      }
-
-      if ( QueryRtcUserActive(RTC_TIMER_USER_DEBUG_UART) )
-      {
-//        DisableUartSmClkIsr();
-        ExitLpm = 1;
-      }
-
-    }
-    else
-    {
-      DivideByFour++;
-    }
+  case RTC_PRESCALE_ZERO_IFG:	// 128Hz
+	  ExitLpm |= Timer_Interrupt(1);
     break;
 
-  case RTC_PRESCALE_ONE_IFG:
-    
-	  // TODO: Per-second timer
-//    IncrementUpTime();
-//    ExitLpm |= OneSecondTimerHandlerIsr();
-    
+  case RTC_PRESCALE_ONE_IFG:	// 1Hz
+	  ExitLpm |= Timer_Interrupt(0);
     break;
   
   default:
@@ -267,7 +193,7 @@ __interrupt void RTC_ISR(void)
 
   if ( ExitLpm )
   {
-    EXIT_LPM_ISR();  
+    EXIT_LPM_ISR();
   }
 }
 

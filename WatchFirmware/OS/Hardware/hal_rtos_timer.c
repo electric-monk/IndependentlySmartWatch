@@ -29,6 +29,7 @@
 #include "hal_crystal_timers.h"
 #include "hal_lpm.h"
 #include "macro.h"
+#include "colindebug.h"
 
 /* these are shared with the assembly code */
 unsigned char RtosTickEnabled = 0;
@@ -197,10 +198,10 @@ void StopCrystalTimer(unsigned char TimerId)
 #pragma vector=TIMER0_A1_VECTOR
 __interrupt void TIMER0_A1_VECTOR_ISR(void)
 {
-  unsigned char ExitLpm = 0;
+	unsigned char ExitLpm = 0;
   
   /* callback when timer expires */
-  switch(__even_in_range(TA0IV,8))
+  switch(__even_in_range(TA0IV,0xE))
   {
   case 0: break;                  
   case 2: ExitLpm = pCrystalCallback1(); RemoveUser(1); break;

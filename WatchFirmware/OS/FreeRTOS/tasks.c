@@ -171,6 +171,9 @@ PRIVILEGED_DATA static volatile portBASE_TYPE xNumOfOverflows 					= ( portBASE_
 PRIVILEGED_DATA static unsigned portBASE_TYPE uxTCBNumber 						= ( unsigned portBASE_TYPE ) 0U;
 PRIVILEGED_DATA static portTickType xNextTaskUnblockTime						= ( portTickType ) portMAX_DELAY;
 
+volatile unsigned portBASE_TYPE uxDelayedTasks = 0;
+volatile unsigned portBASE_TYPE uxPendingQueues = 0;
+
 #if ( configGENERATE_RUN_TIME_STATS == 1 )
 
 	PRIVILEGED_DATA static char pcStatsString[ 50 ] ;
@@ -678,7 +681,7 @@ tskTCB * pxNewTCB;
 	{
 	portTickType xTimeToWake;
 	signed portBASE_TYPE xAlreadyYielded = pdFALSE;
-
+	uxDelayedTasks++;
 		/* A delay time of zero just forces a reschedule. */
 		if( xTicksToDelay > ( portTickType ) 0U )
 		{
@@ -697,7 +700,7 @@ tskTCB * pxNewTCB;
 				/* Calculate the time to wake - this may overflow but this is
 				not a problem. */
 				xTimeToWake = xTickCount + xTicksToDelay;
-// LOCKING?
+
 				/* We must remove ourselves from the ready list before adding
 				ourselves to the blocked list as the same list item is used for
 				both lists. */
@@ -713,10 +716,16 @@ tskTCB * pxNewTCB;
 		{
 			portYIELD_WITHIN_API();
 		}
+	uxDelayedTasks--;
 	}
 
 #endif
 /*-----------------------------------------------------------*/
+
+unsigned portBASE_TYPE vTasksBusy(void)
+{
+	return uxDelayedTasks + uxPendingQueues;
+}
 
 #if ( INCLUDE_uxTaskPriorityGet == 1 )
 

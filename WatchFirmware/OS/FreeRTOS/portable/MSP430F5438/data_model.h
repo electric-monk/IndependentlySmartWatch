@@ -54,9 +54,9 @@
 	.if $DEFINED( __LARGE_DATA_MODEL__ )
 		.define "pushm.a", pushm_x
 		.define "popm.a", popm_x
-		.define "push.a", push_x
-		.define "pop.a", pop_x
-		.define "mov.a", mov_x
+		.define "pushx.a", push_x
+		.define "popx.a", pop_x
+		.define "movx.a", mov_x
 	.else
 		.define "pushm.w", pushm_x
 		.define "popm.w", popm_x

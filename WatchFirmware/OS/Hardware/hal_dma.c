@@ -2,12 +2,15 @@
 #include <FreeRTOS.h>
 #include "hal_board_type.h"
 #include "hal_dma.h"
+#include "hal_lpm.h"
+#include "macro.h"
+#include "colindebug.h"
 
 static DMACallback dmaCallbacks[3];
 
-static void DummyCallback(int channel)
+static int DummyCallback(int channel)
 {
-	// Do nothing
+	return 0; // Don't wake up
 }
 
 void InitialiseDMA(void)
@@ -19,29 +22,34 @@ void InitialiseDMA(void)
 
 void SetDMAHandler(int channel, DMACallback callback)
 {
-	portDISABLE_INTERRUPTS();
+	ENTER_CRITICAL_REGION_QUICK();
 	if (callback == NULL)
 		dmaCallbacks[channel] = DummyCallback;
 	else
 		dmaCallbacks[channel] = callback;
-	portENABLE_INTERRUPTS();
+	LEAVE_CRITICAL_REGION_QUICK();
 }
 
 #pragma vector=DMA_VECTOR
 __interrupt void isrDMA(void)
 {
+	int index;
 	switch (__even_in_range(DMAIV, 16))
 	{
 		case DMAIV_DMA0IFG:
-			dmaCallbacks[0](0);
+			index = 0;
 			break;
 		case DMAIV_DMA1IFG:
-			dmaCallbacks[1](1);
+			index = 1;
 			break;
 		case DMAIV_DMA2IFG:
-			dmaCallbacks[2](2);
+			index = 2;
 			break;
 		default:
-			break;
+			return;	// Don't continue
+	}
+	if (dmaCallbacks[index](index))
+	{
+		EXIT_LPM_ISR();
 	}
 }

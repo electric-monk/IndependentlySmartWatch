@@ -138,6 +138,8 @@ typedef struct QueueDefinition
  */
 typedef xQUEUE * xQueueHandle;
 
+extern volatile unsigned portBASE_TYPE uxPendingQueues;
+
 /*
  * Prototypes for public functions are included here so we don't have to
  * include the API header file (as it defines xQueueHandle differently).  These
@@ -535,6 +537,7 @@ xTimeOutType xTimeOut;
 
 				/* Return to the original privilege level before exiting the
 				function. */
+				uxPendingQueues++;
 				return pdPASS;
 			}
 			else
@@ -863,6 +866,7 @@ unsigned portBASE_TYPE uxSavedInterruptStatus;
 				++( pxQueue->xTxLock );
 			}
 
+			uxPendingQueues++;
 			xReturn = pdPASS;
 		}
 		else
@@ -953,6 +957,7 @@ signed char *pcOriginalReadPosition;
 				}
 
 				taskEXIT_CRITICAL();
+				uxPendingQueues--;
 				return pdPASS;
 			}
 			else
@@ -1068,6 +1073,7 @@ unsigned portBASE_TYPE uxSavedInterruptStatus;
 				++( pxQueue->xRxLock );
 			}
 
+			uxPendingQueues--;
 			xReturn = pdPASS;
 		}
 		else

@@ -25,30 +25,14 @@
 #include "hal_lpm.h"
 #include "HAL_UCS.h"
 #include "macro.h"
+#include "portmacro.h"
+#include "hal_clock_control.h"
 
-static void EnterLpm3(void);
-static void EnterShippingMode(void);
+unsigned short LPMcurrent = LPM3_bits;
 
-static unsigned char EnterShippingModeFlag = 0;
-
-static unsigned char TaskDelayLpmLockCount = 0;
-
+unsigned short sleep = 0, wake = 0;
 
 void MSP430_LPM_ENTER(void)
-{
-  if ( EnterShippingModeFlag )
-  {
-    EnterShippingMode();  
-  }
-  else
-  {
-    EnterLpm3();  
-  }
-  
-}
-
-
-static void EnterLpm3(void)
 {
 #ifdef LPM_ENABLED
     
@@ -62,18 +46,36 @@ static void EnterLpm3(void)
   __disable_interrupt();
   __no_operation();
   DisableRtosTick();
-  /* errata PMM11 divide MCLK by two before going to sleep */
-  MCLK_DIV(2);
-  
-  __enable_interrupt();
-  LPM3;
-  __no_operation();
 
-  /* errata PMM11 - wait to put MCLK into normal mode */
-  __delay_cycles(100);
-  MCLK_DIV(1);
-  
-  
+  // Select a nice mode
+  int smclk = 1;//IsSmClkInUse();
+  if (smclk)
+  {
+	  LPMcurrent = LPM0_bits;
+  }
+  else
+  {
+	  LPMcurrent = LPM3_bits;
+  }
+  MCLK_DIV(2);	// Errata PMM11
+
+  sleep++;
+  if (sleep == 5)
+  {
+	  __no_operation();
+  }
+  //__enable_interrupt();
+  int state = LPMcurrent | GIE;
+  _bis_SR_register(state);
+  __no_operation();
+  wake++;
+
+//  if (!smclk)
+  {
+	  /* errata PMM11 - wait to put MCLK into normal mode */
+	  __delay_cycles(100);
+	  MCLK_DIV(1);
+  }
   
   /* Generate a vTickIsr by setting the flag to trigger an interrupt
    * You can't call vTaskIncrementTick and vTaskSwitchContext from within a
@@ -83,8 +85,8 @@ static void EnterLpm3(void)
    */
   EnableRtosTick();
   RTOS_TICK_SET_IFG();
-  
   __no_operation();
+  
 
 #endif  
   
@@ -92,94 +94,12 @@ static void EnterLpm3(void)
 
 
 
-void SetShippingModeFlag(void)
-{
-  EnterShippingModeFlag = 1;  
-}
-
-void ClearShippingModeFlag(void)
-{
-  EnterShippingModeFlag = 0;  
-}
-
-static void EnterShippingMode(void)
-{
-  /* Turn off the watchdog timer */
-  WDTCTL = WDTPW | WDTHOLD;
-  
-  EnableRstPin();
-  
-  __delay_cycles(100000);
-  
-  __disable_interrupt();
-  __no_operation();
-
-  /* reset radio and drive rts and cts */
-  P10OUT &= ~BIT3;
-  P1OUT |= BIT0 + BIT3;
-  P1DIR |= BIT0 + BIT3;
-  
-  DISABLE_DISPLAY_POWER();
-  DISABLE_LCD_ENABLE();
-  BATTERY_CHARGE_DISABLE();
-  LIGHT_SENSOR_SHUTDOWN();
-  BATTERY_SENSE_DISABLE();
-  HARDWARE_CFG_SENSE_DISABLE();
-  APPLE_POWER_DISABLE();
-  ACCELEROMETER_INT_DISABLE();
-  DISABLE_BUTTONS();
-
-  SELECT_ACLK(SELA__REFOCLK);                
-  SELECT_FLLREF(SELREF__REFOCLK); 
-  UCSCTL8 &= ~SMCLKREQEN;
-  UCSCTL6 |= SMCLKOFF;
-  /* disable aclk */
-  P11SEL &= ~BIT0;
-  XT1_Stop();
-  
-  /* turn off the regulator */
-  unsigned char temp = PMMCTL0_L;
-  PMMCTL0_H = PMMPW_H;
-  PMMCTL0_L = PMMREGOFF | temp;
-  LPM4;
-  __no_operation();
-  __no_operation();
-  
-  /* should not get here without a power event */
-  SoftwareReset();
-}
-
 void SoftwareReset(void)
 {
   /* let the uart drain */
   __delay_cycles(100000);
   
   PMMCTL0 = PMMPW | PMMSWBOR;
-}
-
-
-
-
-void TaskDelayLpmDisable(void)
-{
-  ENTER_CRITICAL_REGION_QUICK();
-  TaskDelayLpmLockCount++;
-  LEAVE_CRITICAL_REGION_QUICK();
-}
-
-void TaskDelayLpmEnable(void)
-{
-  ENTER_CRITICAL_REGION_QUICK();
-  if ( TaskDelayLpmLockCount )
-  {
-    TaskDelayLpmLockCount--;
-  }
-  LEAVE_CRITICAL_REGION_QUICK();
-}
-
-unsigned char GetTaskDelayLockCount(void)
-{
-  return TaskDelayLpmLockCount;  
 }
 
 /******************************************************************************/

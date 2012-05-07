@@ -52,4 +52,7 @@ void EnableSmClkUser(unsigned char User);
  */
 void DisableSmClkUser(unsigned char User);
 
+// Determine if SMCLK is currently required
+#define IsSmClkInUse()		((UCSCTL8 & SMCLKREQEN) != 0)
+
 #endif /* HAL_CLOCK_CONTROL_H */

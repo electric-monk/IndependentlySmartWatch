@@ -81,10 +81,18 @@ void ClearLcd(int async)
 
 void WaitForLcd(void)
 {
-	while (LcdDmaBusy);
+	int enabled = (_get_SR_register() & 0x08) != 0;
+	if (enabled)
+	{
+		while (LcdDmaBusy);
+	}
+	else
+	{
+		LcdDMAComplete(0);
+	}
 }
 
-void LcdDMAComplete(int channel)
+int LcdDMAComplete(int channel)
 {
 	/* wait for shift to complete ( ~3 us ) */
 	while( (LCD_SPI_UCBxSTAT & 0x01) != 0 );
@@ -94,4 +102,6 @@ void LcdDMAComplete(int channel)
 	DisableSmClkUser(LCD_USER);
 
 	LcdDmaBusy = 0;
+
+	return 0;
 }

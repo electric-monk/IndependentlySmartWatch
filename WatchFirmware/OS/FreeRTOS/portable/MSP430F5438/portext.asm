@@ -109,19 +109,18 @@ portRESTORE_CONTEXT .macro
 ;* If the preemptive scheduler is in use a context switch can also occur.
 ;*/
 	
-	.text
+	.sect ".text:_isr"
 	.align 2
 	
 metaWatchSpecialTickISR: .asmfunc
-	; The sr is not saved in portSAVE_CONTEXT() because vPortYield() needs
-	;to save it manually before it gets modified (interrupts get disabled).
-	;push.w sr
+	; MSP430X interrupt handling will have pushed return
+	; address LSB16 then (MSB4<<20)|SP to stack
 	tst.b &RtosTickEnabled
 	jne	vPortPreemptiveTickISR
-	;pop.w sr
 	reti
 	.endasmfunc
 
+	;.text
 	.align 2
 
 vPortPreemptiveTickISR: .asmfunc
@@ -140,22 +139,6 @@ vPortPreemptiveTickISR: .asmfunc
 	.endasmfunc
 ;-----------------------------------------------------------
 
-;	.align 2
-	
-;vPortCooperativeTickISR: .asmfunc
-	
-	; The sr is not saved in portSAVE_CONTEXT() because vPortYield() needs
-	;to save it manually before it gets modified (interrupts get disabled).
-;	push.w sr
-;	portSAVE_CONTEXT
-				
-;	call_x	#vTaskIncrementTick
-		
-;	portRESTORE_CONTEXT
-
-;	.endasmfunc
-;-----------------------------------------------------------
-
 ;
 ; Manual context switch called by the portYIELD() macro.
 ;
@@ -163,40 +146,33 @@ vPortPreemptiveTickISR: .asmfunc
 	.align 2
 
 vPortYield: .asmfunc
-	; Colin fix - Fake the interrupt
+	push.w sr	; An interrupt puts SR on the stack
+	dint		; An interrupt turns off interrupts
+	nop
+	bicx.w #0xF0F0, 0(SP)	; Clear power mode (and address MSB) flags
 	.if $DEFINED( __LARGE_CODE_MODEL__ )
-	push.w sr	; Temporarily
-	dint
-	nop
-	bicx.w #0xFE00, 0(SP)	; Clear power mode flags
+	; We need to shift the top 4 bits of the return
+	; address from the lowest nibble to the highest
 	swpbx.w 4(SP)
+;	rlam.w #4, 4(SP)
 	rlax.w 4(SP)
 	rlax.w 4(SP)
 	rlax.w 4(SP)
 	rlax.w 4(SP)
-	bis.w 0(SP), 4(SP)
+	; Store the required SP bits into the return address MSB
+	bisx.w 0(SP), 4(SP)
+	; Swap the bytes, as interrupts expect MSB then LSB|SP,
+	; but CALLA puts LSB then MSB
+	movx.w 2(SP), 0(SP)
+	movx.w 4(SP), 2(SP)
+	movx.w 0(SP), 4(SP)
 	incdx.a SP	; 'pop' saved SR
-	.else
-	push.w sr	; Placeholder for SR
-	dint
-	nop
 	.endif
-	pushx.a r15
-	mov.w 6(SP), r15
-	mov.w 4(SP), 6(SP)
-	mov.w r15, 4(SP)
-	popx.a r15
-	portSAVE_CONTEXT
 
-	; The sr needs saving before it is modified.
-	;push.w	sr
-	
-	; Now the SR is stacked we can disable interrupts.
-	;dint
-	;nop
-				
-	; Save the context of the current task.
-	;portSAVE_CONTEXT
+	; Now it's as if we're in an interrupt,
+	; it's much the same as a preemptive tick
+
+	portSAVE_CONTEXT
 
 	; Select the next task to run.
 	call_x	#vTaskSwitchContext		

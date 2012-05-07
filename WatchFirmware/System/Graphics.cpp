@@ -17,11 +17,12 @@ private:
 	FullLcdCommand LcdFramebuffer;
 	unsigned short GraphicsDrawing, ScreenRevision, LastRevision;
 
-	static void CheckScreen(int channel)
+	static int CheckScreen(int channel)
 	{
 		LcdDMAComplete(channel);
 		if (instance.ScreenRevision != instance.LastRevision)
 			instance.BlitScreen();
+		return 0;
 	}
 
 	void BlitScreen(void)

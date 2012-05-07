@@ -481,6 +481,8 @@ void vTaskDelete( xTaskHandle pxTaskToDelete ) PRIVILEGED_FUNCTION;
  */
 void vTaskDelay( portTickType xTicksToDelay ) PRIVILEGED_FUNCTION;
 
+unsigned portBASE_TYPE vTasksBusy(void);
+
 /**
  * task. h
  * <pre>void vTaskDelayUntil( portTickType *pxPreviousWakeTime, portTickType xTimeIncrement );</pre>

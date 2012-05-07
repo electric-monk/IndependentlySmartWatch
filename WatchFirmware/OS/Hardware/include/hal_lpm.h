@@ -29,7 +29,8 @@
 /* 
  * MSP430 Exit LPM3 macro
 */
-#define EXIT_LPM_ISR() (LPM3_EXIT)
+extern unsigned short LPMcurrent;
+#define EXIT_LPM_ISR() _bic_SR_register_on_exit(LPMcurrent)
 
 /*!
  * Put the processor into LPM3.  If the shipping mode flag is set then
@@ -37,12 +38,6 @@
  * to the clip).
  */
 void MSP430_LPM_ENTER(void);
-
-/*! set the shipping mode flag that allows the part to be placed into LPM4 */
-void SetShippingModeFlag(void);
-
-/*! clear the shipping mode flag that allows the part to be placed into LPM4 */
-void ClearShippingModeFlag(void);
 
 /*! reset the micro by writing to PMMCTL0 */
 void SoftwareReset(void);

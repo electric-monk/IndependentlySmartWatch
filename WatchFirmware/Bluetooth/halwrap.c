@@ -1,7 +1,10 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include "hal_board_type.h"
+#include "hal_clock_control.h"
+#include "hal_lpm.h"
 #include <btstack/hal_uart_dma.h>
+#include "colindebug.h"
 
 #define BUFFER_SIZE			100
 
@@ -149,6 +152,8 @@ int  hal_uart_dma_set_baud(uint32_t baud)
 
 void hal_uart_dma_send_block(const uint8_t *buffer, uint16_t length)
 {
+	EnableSmClkUser(BT_UART_USER);
+
 	BT_UART_IE &= ~UCTXIE;	// Disable TX interrupt
 
 	tx_buffer = (uint8_t*)buffer;
@@ -159,6 +164,8 @@ void hal_uart_dma_send_block(const uint8_t *buffer, uint16_t length)
 
 void hal_uart_dma_receive_block(uint8_t *buffer, uint16_t len)
 {
+	EnableSmClkUser(BT_UART_USER);
+
 	BT_UART_IE &= ~UCRXIE;	// Disable RX interrupt
 
 	rx_buffer = buffer;
@@ -171,12 +178,17 @@ void hal_uart_dma_receive_block(uint8_t *buffer, uint16_t len)
 
 void hal_uart_dma_set_sleep(uint8_t sleep)
 {
-	// TODO: If sleep is non-0, LPM0 can be used (UART not in use)
+	if (sleep)
+		DisableSmClkUser(BT_UART_USER);
+	else
+		EnableSmClkUser(BT_UART_USER);
 }
 
 #pragma vector=BT_UART_VECTOR
 __interrupt void isrBluetoothUART(void)
 {
+	int exitLpm = 0;
+
 	switch (BT_UART_IV)
 	{
 		case 2: // RX
@@ -192,7 +204,7 @@ __interrupt void isrBluetoothUART(void)
 				UART_DISABLE_RX();
 				BT_UART_IE &= ~UCRXIE;
 				rx_handler();
-				// Do something about return CPU mode?
+				exitLpm = 1;
 			}
 			break;
 
@@ -212,13 +224,16 @@ __interrupt void isrBluetoothUART(void)
 			{
 				BT_UART_IE &= ~UCTXIE;
 				tx_handler();
-				// Do something about return CPU mode?
+				exitLpm = 1;
 			}
 			break;
 
 		default:
 			break;
 	}
+
+	if (exitLpm)
+		EXIT_LPM_ISR();
 }
 
 #pragma vector=BT_CTRL_VECTOR
@@ -228,4 +243,5 @@ __interrupt void isrBluetoothPort(void)
 //	if (tx_length != 0)
 //		BT_UART_IE |= UCTXIE;
 	cts_handler();
+	EXIT_LPM_ISR();
 }

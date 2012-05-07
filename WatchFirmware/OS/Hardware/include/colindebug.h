@@ -2,15 +2,28 @@
 #define __COLINDEBUG_H__
 
 #include <stdio.h>
+#include "portmacro.h"
 
 extern char goodprintfbuf[100];
 void goodsprintf(char *out, char *format, ...);
+
+#ifdef _COLIN_DEBUG
+
+// If this code is enabled for a release build, it'll
+// continually reset on "Security violation".
+
 #define goodprintf(format, ...)						\
 {													\
-	asm("    dint"); asm("    nop");				\
+	int intr = portSET_INTERRUPT_MASK_FROM_ISR();	\
 	goodsprintf(goodprintfbuf, format, ## __VA_ARGS__);	\
 	fputs(goodprintfbuf, stderr);					\
-	asm("    eint");								\
+	portCLEAR_INTERRUPT_MASK_FROM_ISR(intr);		\
 }
+
+#else
+
+#define goodprintf(format, ...)
+
+#endif
 
 #endif

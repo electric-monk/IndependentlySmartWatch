@@ -58,7 +58,7 @@ void WriteLcd(unsigned char* pData,unsigned int Size, int async);
 void ClearLcd(int async);	// Convenience
 void WaitForLcd(void);
 
-void LcdDMAComplete(int channel);
+int LcdDMAComplete(int channel);
 extern unsigned short LcdDmaBusy;
 
 #ifdef __cplusplus

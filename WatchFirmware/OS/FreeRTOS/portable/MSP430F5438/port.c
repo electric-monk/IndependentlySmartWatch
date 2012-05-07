@@ -78,7 +78,7 @@ being re-enabled if the count is zero.
 usCriticalNesting will get set to zero when the scheduler starts, but must
 not be initialised to zero as this will cause problems during the startup
 sequence. */
-volatile unsigned short usCriticalNesting = portINITIAL_CRITICAL_NESTING;
+volatile portSTACK_TYPE usCriticalNesting = portINITIAL_CRITICAL_NESTING;
 /*-----------------------------------------------------------*/
 
 

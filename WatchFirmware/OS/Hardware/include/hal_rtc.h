@@ -36,27 +36,6 @@ typedef struct {
 	unsigned char Hour, Minute, Second;
 } RTC_DATA;
 
-/*! Enables the prescale one RTC interrupt
- *
- * The prescale one interrupt is used because the RTC runs even when the
- * processor is in LPM3.  It is used as a 32 Hz system timer.
-
- * \param user one of defined users (see hal_rtc.h)
- *
- */
-void EnableRtcPrescaleInterruptUser(unsigned char user);
-
-
-/*! Disables the prescale one RTC interrupt user
- *
- * Each interrupt takes the processor out of the low power mode so we
- * can't leave it running all the time. Multiple things use the timer so we
- * make sure everyone is done before turning it off.
- *
- * \param user one of defined users (see hal_rtc.h)
- */
-void DisableRtcPrescaleInterruptUser(unsigned char user);
-
 /*! Initialize the RTC for normal watch operation
  *
  * This function also sets up the static prescale one and 1ppS messages as well
@@ -76,17 +55,14 @@ void InitializeRealTimeClock( void );
  */
 void halRtcSet(RTC_DATA* pRtcData);
 
-/*!
- * Determine if a user is actively using the real time clock
- *
- * \param UserMask user of the RTC
- *
- * \return > 0 if RTC user is active
- */
-unsigned char QueryRtcUserActive(unsigned char UserMask);
-
 // The exact value is 31.25 mS
 #define RTC_TIMER_MS_PER_TICK       31   
+
+// Number of RTC prescale interrupts per second
+#define RTC_TICKS_PER_SECOND		128
+
+void SetRTCPrescaleInterrupt(int enable);
+int GetRTCPrescaleInterruptEnabled(void);
 
 /*! Get the current structure containing the real time clock parameters.
  *
@@ -94,16 +70,6 @@ unsigned char QueryRtcUserActive(unsigned char UserMask);
  *
  */
 void halRtcGet(RTC_DATA* pRtcData);
-
-/*! Users of the RTC prescaler timer 0 interrupt.  This interrupt occurs at
- * 128 kHz and is divided down to occur at 32 khZ.
- */
-#define RTC_TIMER_VIBRATION       ( BIT0 )
-#define RTC_TIMER_RESERVED        ( BIT1 )
-#define RTC_TIMER_BUTTON          ( BIT2 )
-#define RTC_TIMER_PEDOMETER       ( BIT3 )
-#define RTC_TIMER_USER_DEBUG_UART ( BIT4 )
-#define RTC_TIMER_USER_BLASTER    ( BIT5 )
 
 /* TI fix */
 extern int SetRTCYEAR(int year); 	

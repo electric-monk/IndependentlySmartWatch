@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-typedef void (*DMACallback)(int channel);
+typedef int (*DMACallback)(int channel);
 
 void InitialiseDMA(void);
 void SetDMAHandler(int channel, DMACallback callback);

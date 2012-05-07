@@ -123,7 +123,7 @@ occurs.
 #define configUSE_MALLOC_FAILED_HOOK        1
 #define configUSE_APPLICATION_TASK_TAG      1
 
-#define configUSE_TIMERS 1
+//#define configUSE_TIMERS 1
 #define configTIMER_TASK_PRIORITY	(tskIDLE_PRIORITY + 2)
 #define configTIMER_QUEUE_LENGTH	4
 #define configTIMER_TASK_STACK_DEPTH	(configMINIMAL_STACK_SIZE + 20)
