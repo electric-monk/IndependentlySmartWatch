@@ -37,7 +37,6 @@ int Timer_Interrupt(int prescale)
 		ticks = RTC_TICKS_PER_SECOND;
 
 	activate = 0;
-	usePrescale = 0;
 	for (i = 0; i < MAX_TIMERS; i++)
 	{
 		if (!(Timer_List[i].flags & TIMER_ALLOCATED))
@@ -67,15 +66,21 @@ int Timer_Interrupt(int prescale)
 				Timer_List[i].flags &= ~TIMER_ACTIVE;
 			activate |= Timer_List[i].callback((TimerHandle*)(Timer_List + i), Timer_List[i].context);
 		}
-		else
-		{
-			// If this timer just switched state, turn on sub-second timers
-			if (Timer_List[i].current < RTC_TICKS_PER_SECOND)
-				usePrescale = 1;
-		}
 	}
 
+	// Re-scan all timers, as prescaler state may have changed
+	usePrescale = 0;
+	for (i = 0; i < MAX_TIMERS; i++)
+	{
+		if (!(Timer_List[i].flags & TIMER_ALLOCATED))
+			continue;
+		if (!(Timer_List[i].flags & TIMER_ACTIVE))
+			continue;
+		if (Timer_List[i].current < RTC_TICKS_PER_SECOND)
+			usePrescale = 1;
+	}
 	SetRTCPrescaleInterrupt(usePrescale);
+
 	return activate;
 }
 
