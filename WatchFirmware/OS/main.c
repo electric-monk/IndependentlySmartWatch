@@ -9,7 +9,6 @@
 #include "hal_calibration.h"
 #include "hal_miscellaneous.h"
 #include "hal_rtc.h"
-#include "hal_battery.h"
 #include "hal_accelerometer.h"
 #include "hal_vibe.h"
 #include "hal_lcd.h"
@@ -18,6 +17,8 @@
 #include "bttask.h"
 
 #include "System.h"
+#include "Adc.h"
+#include "Battery.h"
 
 #include <stdio.h>
 
@@ -72,14 +73,15 @@ void main(void)
 
 	InitialiseDMA();
 	InitializeRealTimeClock();
-	ConfigureBatteryPins();
+	Adc_Initialise();
+	Battery_Initialise();
 	InitAccelerometerPeripheral();
 	SetupVibrationMotorTimerAndPwm();
 	InitialiseBluetooth();
 	StartLcd();
 
 	InitialiseSystem();
-	// TODO: Initiate tasks (Video driver, actual interface)
+	// TODO: Initiate tasks (actual interface)
 	goodprintf("Startup: %i bytes free, restart reason %04x\n", (int)xPortGetFreeHeapSize(), (int)reason);
 #ifdef _COLIN_DEBUG
 	ENABLE_LCD_LED();
@@ -99,7 +101,7 @@ void vApplicationMallocFailedHook(size_t xWantedSize)
 
 void vApplicationIdleHook(void)
 {
-	if (vTasksBusy() == 0)
+	if (!vTasksReady())
 	{
 	    /* Call MSP430 Utility function to enable low power mode 3.     */
 		/* Put OS and Processor to sleep. Will need an interrupt        */

@@ -172,7 +172,6 @@ PRIVILEGED_DATA static unsigned portBASE_TYPE uxTCBNumber 						= ( unsigned por
 PRIVILEGED_DATA static portTickType xNextTaskUnblockTime						= ( portTickType ) portMAX_DELAY;
 
 volatile unsigned portBASE_TYPE uxDelayedTasks = 0;
-volatile unsigned portBASE_TYPE uxPendingQueues = 0;
 
 #if ( configGENERATE_RUN_TIME_STATS == 1 )
 
@@ -722,9 +721,29 @@ tskTCB * pxNewTCB;
 #endif
 /*-----------------------------------------------------------*/
 
-unsigned portBASE_TYPE vTasksBusy(void)
+// Shouldn't need to lock, as it's just reading the data
+unsigned int vTasksReady(void)
 {
-	return uxDelayedTasks + uxPendingQueues;
+	int i;
+
+	// Check to see if anybody's waiting to run, in which case the kernel
+	// needs to keep churning
+	if (uxDelayedTasks != 0)
+		return 1;
+//	if (xDelayedTaskList1.pxIndex != &xDelayedTaskList1.xListEnd)
+//		return 1;
+//	if (xDelayedTaskList2.pxIndex != &xDelayedTaskList2.xListEnd)
+//		return 1;
+	// Check to see if anybody's ready, but not in the 'active' list
+	if (xPendingReadyList.pxIndex != &xPendingReadyList.xListEnd)
+		return 1;
+	// Check all event priorities, ignoring 'idle task'. This relies
+	// on the only idle task being the task that puts us into LPM.
+	for (i = 1 /* Skip idle priority */; i < configMAX_PRIORITIES; i++)
+		if (pxReadyTasksLists[i].pxIndex != &pxReadyTasksLists[i].xListEnd)
+			return 1;
+	// Nothing pending
+	return 0;
 }
 
 #if ( INCLUDE_uxTaskPriorityGet == 1 )

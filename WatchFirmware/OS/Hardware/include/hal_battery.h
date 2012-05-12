@@ -23,6 +23,9 @@
 
 #ifndef HAL_BATTERY_H
 #define HAL_BATTERY_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*! The state of the battery charging circuit is dedcoded from the bits on 
  *  port 6 
@@ -44,25 +47,7 @@
  */
 void ConfigureBatteryPins(void);
 
-/*! Read battery state and update charge output 
- *
- * \return 1 if the state of power good has changed, 0 otherwise
- *
- * \note Status can be used to update the LCD screen of a possible change
- * in battery charging state
- */
-unsigned char BatteryChargingControl(void);
-
-
-/*! Query whether or not the battery is charging
- *
- * \return 1 if the battery is charging else 0
- */
-unsigned char QueryBatteryCharging(void);
-
-/*!
- * \return 1 if the power is good and 0 otherwise.
- */
-unsigned char QueryPowerGood(void);
-
+#ifdef __cplusplus
+}
+#endif
 #endif // HAL_BATTERY_H

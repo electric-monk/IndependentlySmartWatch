@@ -2,11 +2,22 @@
 
 char goodprintfbuf[100];
 
-static void printint(char **out, unsigned int value)
+static void printint(char **out, unsigned int value, int precision)
 {
 	unsigned int msb = value / 10;
-	if (msb != 0)
-		printint(out, msb);
+	precision -= 1;
+	if (msb == 0)
+	{
+		while (precision > 0)
+		{
+			*((*out)++) = '0';
+			precision--;
+		}
+	}
+	else
+	{
+		printint(out, msb, precision);
+	}
 	*((*out)++) = '0' + (value % 10);
 }
 
@@ -45,7 +56,7 @@ static void goodvsprintf(char *out, char *format, va_list params)
 				case 'u':
 				{
 					unsigned int bob = va_arg(params, unsigned int);
-					printint(&out, bob);
+					printint(&out, bob, precision);
 				}
 					break;
 				case 'i':
@@ -56,7 +67,7 @@ static void goodvsprintf(char *out, char *format, va_list params)
 						*(out++) = '-';
 						bob = -bob;
 					}
-					printint(&out, bob);
+					printint(&out, bob, precision);
 				}
 					break;
 				case 'x':

@@ -25,6 +25,10 @@
 #ifndef HAL_CALIBRATION_H
 #define HAL_CALIBRATION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*! Read the calibration data from information memory segment A and determine
  * if is valid.
  *
@@ -56,4 +60,7 @@ unsigned char GetXtalCalibrationValue(void);
  */
 signed char GetRtcCalibrationValue(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* HAL_CALBRATION_H */

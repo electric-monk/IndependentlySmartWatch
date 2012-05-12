@@ -31,18 +31,11 @@ int Timer_Interrupt(int prescale)
 {
 	int i, ticks, activate, usePrescale;
 
-	if (GetRTCPrescaleInterruptEnabled())
-	{
-		if (!prescale)
-			return 0;
+	if (prescale)
 		ticks = 1;
-	}
 	else
-	{
-		if (prescale)
-			return 0;
 		ticks = RTC_TICKS_PER_SECOND;
-	}
+
 	activate = 0;
 	usePrescale = 0;
 	for (i = 0; i < MAX_TIMERS; i++)
@@ -51,6 +44,20 @@ int Timer_Interrupt(int prescale)
 			continue;
 		if (!(Timer_List[i].flags & TIMER_ACTIVE))
 			continue;
+		if (Timer_List[i].delay >= RTC_TICKS_PER_SECOND)
+		{
+			// If it's over a second and we're in a sub-second timer,
+			// don't progress it
+			if (prescale)
+				continue;
+		}
+		else
+		{
+			// If it's less than a second and we're in a second timer,
+			// don't progress it
+			if (!prescale)
+				continue;
+		}
 		Timer_List[i].current -= ticks;
 		if (Timer_List[i].current <= 0)
 		{
@@ -58,15 +65,16 @@ int Timer_Interrupt(int prescale)
 				Timer_List[i].current = Timer_List[i].delay;
 			else
 				Timer_List[i].flags &= ~TIMER_ACTIVE;
-			TimerCallback toCall = Timer_List[i].callback;
-			activate |= toCall((TimerHandle*)(Timer_List + i), Timer_List[i].context);
+			activate |= Timer_List[i].callback((TimerHandle*)(Timer_List + i), Timer_List[i].context);
 		}
 		else
 		{
-			if (Timer_List[i].current < 1000)
+			// If this timer just switched state, turn on sub-second timers
+			if (Timer_List[i].current < RTC_TICKS_PER_SECOND)
 				usePrescale = 1;
 		}
 	}
+
 	SetRTCPrescaleInterrupt(usePrescale);
 	return activate;
 }
@@ -98,7 +106,7 @@ TimerHandle Timer_Create(TimerCallback callback, void *context, int delay, int r
 	return entry;
 }
 
-void Timer_Reset(TimerHandle *timer, int delay, int repeats)
+void Timer_Reset(TimerHandle timer, int delay, int repeats)
 {
 	unsigned long muldiv = delay;
 	muldiv *= RTC_TICKS_PER_SECOND;
@@ -110,16 +118,16 @@ void Timer_Reset(TimerHandle *timer, int delay, int repeats)
 	else
 		((TIMER_ENTRY*)timer)->flags &= ~TIMER_REPEATS;
 	((TIMER_ENTRY*)timer)->current = ((TIMER_ENTRY*)timer)->delay;
-	if (delay > 0)
+	if (((TIMER_ENTRY*)timer)->current > 0)
 	{
 		((TIMER_ENTRY*)timer)->flags |= TIMER_ACTIVE;
-		if (delay < 1000)
+		if (((TIMER_ENTRY*)timer)->current < RTC_TICKS_PER_SECOND)
 			SetRTCPrescaleInterrupt(1);
 	}
 	LEAVE_CRITICAL_REGION_QUICK();
 }
 
-void Timer_Change(TimerHandle *timer, TimerCallback callback, void *context)
+void Timer_Change(TimerHandle timer, TimerCallback callback, void *context)
 {
 	ENTER_CRITICAL_REGION_QUICK();
 	((TIMER_ENTRY*)timer)->callback = callback;
@@ -127,19 +135,19 @@ void Timer_Change(TimerHandle *timer, TimerCallback callback, void *context)
 	LEAVE_CRITICAL_REGION_QUICK();
 }
 
-void Timer_Destroy(TimerHandle *timer)
+void Timer_Destroy(TimerHandle timer)
 {
 	ENTER_CRITICAL_REGION_QUICK();
 	((TIMER_ENTRY*)timer)->flags = 0;
 	LEAVE_CRITICAL_REGION_QUICK();
 }
 
-TimerCallback Timer_GetCallback(TimerHandle *timer)
+TimerCallback Timer_GetCallback(TimerHandle timer)
 {
 	return ((TIMER_ENTRY*)timer)->callback;
 }
 
-void* Timer_GetContext(TimerHandle *timer)
+void* Timer_GetContext(TimerHandle timer)
 {
 	return ((TIMER_ENTRY*)timer)->context;
 }

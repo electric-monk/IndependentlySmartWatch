@@ -27,6 +27,9 @@
 
 #ifndef HAL_RTC_H
 #define HAL_RTC_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct {
 	unsigned int Year;
@@ -92,4 +95,7 @@ extern int GetRTCHOUR(void);
 extern int GetRTCMIN(void);
 extern int GetRTCSEC(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* HAL_RTC_H */
