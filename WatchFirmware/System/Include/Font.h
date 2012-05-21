@@ -32,6 +32,18 @@ typedef struct {
 
 class Font
 {
+public:
+	virtual ~Font();
+
+	virtual int Width(const char *str, int len = -1) = 0;
+	virtual int Height(void) = 0;
+	virtual int Baseline(void)  = 0;
+
+	virtual int Print(Bitmap *destination, int x, int y, const char *str, int len = -1, bool inverse = false) = 0;
+};
+
+class BitmapFont : public Font
+{
 private:
 	const FontInformation *fontInformation;
 	Bitmap **fontGlyphs;
@@ -42,13 +54,31 @@ private:
 	const FontKerning* Find(FontChar a, FontChar b);
 
 public:
-	Font(const FontInformation *info, Bitmap **glyphs, const FontCharacter *characters, const FontKerning *kernings);
+	BitmapFont(const FontInformation *info, Bitmap **glyphs, const FontCharacter *characters, const FontKerning *kernings);
 
 	int Width(const char *str, int len = -1);
-	int Height(void) { return fontInformation->lineHeight; }
-	int Baseline(void) { return fontInformation->baseline; }
+	int Height(void);
+	int Baseline(void);
 
-	int Print(Bitmap *destination, int x, int y, const char *str, int len = -1);
+	int Print(Bitmap *destination, int x, int y, const char *str, int len = -1, bool inverse = false);
+};
+
+class CompositeFont : public Font
+{
+public:
+	// Note: This class is currently not UTF8-capable
+
+	CompositeFont(Font *uppercase, Font *lowercase, bool followBaseline);
+
+	int Width(const char *str, int len = -1);
+	int Height(void);
+	int Baseline(void);
+
+	int Print(Bitmap *destination, int x, int y, const char *str, int len = -1, bool inverse = false);
+
+private:
+	Font *m_upper, *m_lower;
+	bool m_followBaseline;
 };
 
 #endif // __FONT_H__

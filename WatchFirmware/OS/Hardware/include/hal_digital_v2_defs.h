@@ -144,7 +144,7 @@
 
 // NOTE the the buttons are grounded. That means that we want to invert the bits
 // when reading the port to have positive logic where a button press is a "1"
-#define BUTTON_PORT_IN     ~P2IN
+#define BUTTON_PORT_IN     (~P2IN)
 
 // Configure the hardware port for the button support P2.4 is excluded
 #define CONFIGURE_BUTTON_PINS() { \

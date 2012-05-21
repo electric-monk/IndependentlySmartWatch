@@ -7,6 +7,6 @@
 
 #include "Font.h"
 
-extern Font MetaWatch_Small_8pt;
+extern BitmapFont MetaWatch_Small_8pt;
 
 #endif

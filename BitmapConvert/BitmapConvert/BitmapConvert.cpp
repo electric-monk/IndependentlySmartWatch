@@ -175,7 +175,7 @@ static void ConvertFont(const TCHAR *font, const TCHAR *buffername, FILE *output
 	_ftprintf(output, _T("static const FontInformation info_%s = { %i, %i, sizeof(chars_%s) / sizeof(chars_%s[0]), sizeof(kerns_%s) / sizeof(kerns_%s[0]) };\n\n"), buffername,
 		data.LineHeight(), data.Baseline(), buffername, buffername, buffername, buffername);
 	// Generate font definition
-	_ftprintf(output, _T("Font %s(&info_%s, &glyphs_%s[0], &chars_%s[0], &kerns_%s[0]);\n\n"),
+	_ftprintf(output, _T("BitmapFont %s(&info_%s, &glyphs_%s[0], &chars_%s[0], &kerns_%s[0]);\n\n"),
 		buffername, buffername, buffername, buffername, buffername);
 }
 
@@ -235,7 +235,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE *source = GenerateSourceFile(filename, argv[1]);
 	if (_tcsicmp(argv[1] + i, _T("fnt")) == 0)
 	{
-		type = _T("Font");
+		type = _T("BitmapFont");
 		// Convert font
 		ConvertFont(argv[1], filename, source);
 	}

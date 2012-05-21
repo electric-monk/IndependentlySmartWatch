@@ -10,8 +10,6 @@ static void ReportISR(int id)
 	goodprintf("Unhandled interrupt %i\n", id);
 }
 
-#pragma vector=PORT2_VECTOR
-EMPTY_ISR(PORT2_VECTOR);
 #pragma vector=USCI_B3_VECTOR
 EMPTY_ISR(USCI_B3_VECTOR);
 #pragma vector=USCI_A3_VECTOR
@@ -36,8 +34,12 @@ EMPTY_ISR(UNMI_VECTOR);
 EMPTY_ISR(SYSNMI_VECTOR);
 
 /*
+// ADC
 #pragma vector=ADC12_VECTOR
 EMPTY_ISR(ADC12_VECTOR);
+// Buttons
+#pragma vector=PORT2_VECTOR
+EMPTY_ISR(PORT2_VECTOR);
 */
 
 /*

@@ -1,9 +1,15 @@
-#Sat Apr 21 15:50:25 PDT 2012
+#Mon May 21 01:13:34 PDT 2012
 eclipse.preferences.version=1
+encoding//Debug/Application/subdir_rules.mk=UTF-8
+encoding//Debug/Application/subdir_vars.mk=UTF-8
 encoding//Debug/Bluetooth/btstack/subdir_rules.mk=UTF-8
 encoding//Debug/Bluetooth/btstack/subdir_vars.mk=UTF-8
 encoding//Debug/Bluetooth/subdir_rules.mk=UTF-8
 encoding//Debug/Bluetooth/subdir_vars.mk=UTF-8
+encoding//Debug/Menus/MenuResources/subdir_rules.mk=UTF-8
+encoding//Debug/Menus/MenuResources/subdir_vars.mk=UTF-8
+encoding//Debug/Menus/subdir_rules.mk=UTF-8
+encoding//Debug/Menus/subdir_vars.mk=UTF-8
 encoding//Debug/OS/FreeRTOS/portable/MSP430F5438/subdir_rules.mk=UTF-8
 encoding//Debug/OS/FreeRTOS/portable/MSP430F5438/subdir_vars.mk=UTF-8
 encoding//Debug/OS/FreeRTOS/portable/MemMang/subdir_rules.mk=UTF-8
@@ -16,8 +22,8 @@ encoding//Debug/OS/Hardware/subdir_rules.mk=UTF-8
 encoding//Debug/OS/Hardware/subdir_vars.mk=UTF-8
 encoding//Debug/OS/subdir_rules.mk=UTF-8
 encoding//Debug/OS/subdir_vars.mk=UTF-8
-encoding//Debug/System/Resources/subdir_rules.mk=UTF-8
-encoding//Debug/System/Resources/subdir_vars.mk=UTF-8
+encoding//Debug/System/Include/Resources/subdir_rules.mk=UTF-8
+encoding//Debug/System/Include/Resources/subdir_vars.mk=UTF-8
 encoding//Debug/System/subdir_rules.mk=UTF-8
 encoding//Debug/System/subdir_vars.mk=UTF-8
 encoding//Debug/makefile=UTF-8

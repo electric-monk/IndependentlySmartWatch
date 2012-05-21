@@ -169,5 +169,5 @@ static const FontKerning kerns_MetaWatch_Large_16pt[] = {
 
 static const FontInformation info_MetaWatch_Large_16pt = { 16, 13, sizeof(chars_MetaWatch_Large_16pt) / sizeof(chars_MetaWatch_Large_16pt[0]), sizeof(kerns_MetaWatch_Large_16pt) / sizeof(kerns_MetaWatch_Large_16pt[0]) };
 
-Font MetaWatch_Large_16pt(&info_MetaWatch_Large_16pt, &glyphs_MetaWatch_Large_16pt[0], &chars_MetaWatch_Large_16pt[0], &kerns_MetaWatch_Large_16pt[0]);
+BitmapFont MetaWatch_Large_16pt(&info_MetaWatch_Large_16pt, &glyphs_MetaWatch_Large_16pt[0], &chars_MetaWatch_Large_16pt[0], &kerns_MetaWatch_Large_16pt[0]);
 

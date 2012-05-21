@@ -99,5 +99,5 @@ static const FontKerning kerns_MetaWatch_Small_8pt[] = {
 
 static const FontInformation info_MetaWatch_Small_8pt = { 6, 5, sizeof(chars_MetaWatch_Small_8pt) / sizeof(chars_MetaWatch_Small_8pt[0]), sizeof(kerns_MetaWatch_Small_8pt) / sizeof(kerns_MetaWatch_Small_8pt[0]) };
 
-Font MetaWatch_Small_8pt(&info_MetaWatch_Small_8pt, &glyphs_MetaWatch_Small_8pt[0], &chars_MetaWatch_Small_8pt[0], &kerns_MetaWatch_Small_8pt[0]);
+BitmapFont MetaWatch_Small_8pt(&info_MetaWatch_Small_8pt, &glyphs_MetaWatch_Small_8pt[0], &chars_MetaWatch_Small_8pt[0], &kerns_MetaWatch_Small_8pt[0]);
 

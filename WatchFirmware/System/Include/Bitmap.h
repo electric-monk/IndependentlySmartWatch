@@ -31,6 +31,7 @@ public:
 		else dataBits[(y * dataWidthSpan) + (x >> 3)] &= ~(1 << (x & 7));
 	}
 	void Line(int x1, int y1, int x2, int y2, bool set);
+	void LineRect(int x1, int y1, int x2, int y2, bool set);
 	void FillRect(int x1, int y1, int x2, int y2, bool set);
 	void Circle(int x0, int y0, int radius, bool set);
 

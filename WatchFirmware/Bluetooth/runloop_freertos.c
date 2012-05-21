@@ -20,7 +20,7 @@ static int HandleTimer(TimerHandle timer, void *context)
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 	timer_source_t *source = (timer_source_t*)context;
 	xQueueSendFromISR(s_queue, &source, &xHigherPriorityTaskWoken);
-	return xHigherPriorityTaskWoken;
+	return 1;
 }
 
 void embedded_trigger()

@@ -74,7 +74,13 @@ static __inline void WriteBitmap(unsigned char *bits, int pixelOffset, unsigned 
 	// Shortcut
 	if (pixelOffset == 0)
 	{
+		if (!(flags & BLIT_OR))
+			*bits &= ~mask;
+		else if (flags & BLIT_PREINVERT)
+			*bits ^= mask;
 		*bits = (*bits & ~mask) | data;
+		if (flags & BLIT_POSTINVERT)
+			*bits ^= mask;
 		return;
 	}
 
@@ -157,6 +163,14 @@ void Bitmap::Blit(const Bitmap *source, int x, int y, int xoffset, int yoffset, 
 		screenRow += destDataWidthSpan;
 	}
 	End();
+}
+
+void Bitmap::LineRect(int x1, int y1, int x2, int y2, bool set)
+{
+	Line(x1, y1, x2, y1, set);
+	Line(x1, y1, x1, y2, set);
+	Line(x2, y1, x2, y2, set);
+	Line(x1, y2, x2, y1, set);
 }
 
 void Bitmap::FillRect(int x1, int y1, int x2, int y2, bool set)

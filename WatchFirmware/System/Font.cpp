@@ -90,7 +90,11 @@ public:
 	}
 };
 
-Font::Font(const FontInformation *info, Bitmap **glyphs, const FontCharacter *characters, const FontKerning *kernings)
+Font::~Font()
+{
+}
+
+BitmapFont::BitmapFont(const FontInformation *info, Bitmap **glyphs, const FontCharacter *characters, const FontKerning *kernings)
 {
 	fontInformation = info;
 	fontGlyphs = glyphs;
@@ -98,7 +102,7 @@ Font::Font(const FontInformation *info, Bitmap **glyphs, const FontCharacter *ch
 	fontKernings = kernings;
 }
 
-const FontCharacter* Font::Find(FontChar c)
+const FontCharacter* BitmapFont::Find(FontChar c)
 {
 	FontCharacter key;
 
@@ -106,7 +110,7 @@ const FontCharacter* Font::Find(FontChar c)
 	return (FontCharacter*)bsearch(&key, fontCharacters, fontInformation->charCount, sizeof(FontCharacter), CompareChars);
 }
 
-const FontKerning* Font::Find(FontChar a, FontChar b)
+const FontKerning* BitmapFont::Find(FontChar a, FontChar b)
 {
 	FontKerning key;
 
@@ -117,7 +121,7 @@ const FontKerning* Font::Find(FontChar a, FontChar b)
 	return (FontKerning*)bsearch(&key, fontKernings, fontInformation->kernCount, sizeof(FontKerning), CompareKerns);
 }
 
-int Font::Width(const char *str, int len)
+int BitmapFont::Width(const char *str, int len)
 {
 	int width;
 	FontChar last;
@@ -147,7 +151,17 @@ int Font::Width(const char *str, int len)
 	return width;
 }
 
-int Font::Print(Bitmap *destination, int x, int y, const char *str, int len)
+int BitmapFont::Height(void)
+{
+	return fontInformation->lineHeight;
+}
+
+int BitmapFont::Baseline(void)
+{
+	return fontInformation->baseline;
+}
+
+int BitmapFont::Print(Bitmap *destination, int x, int y, const char *str, int len, bool inverse)
 {
 	FontChar last;
 	CharacterReader reader;
@@ -170,10 +184,122 @@ int Font::Print(Bitmap *destination, int x, int y, const char *str, int len)
 		const FontKerning *kerning = Find(last, ch->c);
 		if (kerning != NULL)
 			x += kerning->offset;
-		destination->Blit(fontGlyphs[ch->image], x + ch->ox, y + ch->oy, ch->bx, ch->by, ch->bw, ch->bh);
+		destination->Blit(fontGlyphs[ch->image], x + ch->ox, y + ch->oy, ch->bx, ch->by, ch->bw, ch->bh, inverse ? BLIT_POSTINVERT : 0);
 		x += ch->advance;
 		last = ch->c;
 	}
 	destination->End();
+	return x;
+}
+
+static bool IsUpperFont(char c)
+{
+	return !((c >= 'a') && (c <= 'z'));
+}
+
+static void MakeUpper(char *buf, const char *input, int len)
+{
+	while (len != 0)
+	{
+		char c = *(input++);
+		if ((c >= 'a') && (c <= 'z'))
+			c -= 0x20;
+		*(buf++) = c;
+		len--;
+	}
+}
+
+static int CountLength(const char *str, int max)
+{
+	if (max == 0)
+		return 0;
+	if ((*str) == '\0')
+		return 0;
+	if (max == 1)
+		return 1;
+	bool state = IsUpperFont(*str);
+	int count = 1;
+	max--;
+	str++;
+	while ((*str) != '\0')
+	{
+		if (IsUpperFont(*str) != state)
+			break;
+		str++;
+		count++;
+		max--;
+		if (max == 0)
+			break;
+	}
+	return count;
+}
+
+CompositeFont::CompositeFont(Font *uppercase, Font *lowercase, bool followBaseline)
+{
+	m_upper = uppercase;
+	m_lower = lowercase;
+	m_followBaseline = followBaseline;
+}
+
+int CompositeFont::Width(const char *str, int len)
+{
+	int total;
+	int runLength;
+
+	total = 0;
+	while ((len != 0) && ((*str) != '\0'))
+	{
+		runLength = CountLength(str, len);
+		total += (IsUpperFont(*str) ? m_upper : m_lower)->Width(str, runLength);
+		len -= runLength;
+		str += runLength;
+	}
+	return total;
+}
+
+int CompositeFont::Height(void)
+{
+	return m_upper->Height();
+}
+
+int CompositeFont::Baseline(void)
+{
+	return m_upper->Baseline();
+}
+
+int CompositeFont::Print(Bitmap *destination, int x, int y, const char *str, int len, bool inverse)
+{
+	int runLength;
+	int yLow;
+
+	yLow = y;
+	if (m_followBaseline)
+		yLow += m_upper->Baseline() - m_lower->Baseline();
+	while ((len != 0) && ((*str) != '\0'))
+	{
+		runLength = CountLength(str, len);
+		if (IsUpperFont(*str))
+		{
+			x = m_upper->Print(destination, x, y, str, runLength, inverse);
+			len -= runLength;
+			str += runLength;
+		}
+		else
+		{
+			char temp[10];
+
+			while (runLength > 0)
+			{
+				int copy = runLength;
+				if (copy > sizeof(temp))
+					copy = sizeof(temp);
+				MakeUpper(temp, str, copy);
+				x = m_lower->Print(destination, x, yLow, temp, copy, inverse);
+				len -= copy;
+				str += copy;
+				runLength -= copy;
+			}
+		}
+	}
 	return x;
 }
