@@ -4,14 +4,10 @@
 #include "Spacer.h"
 #include "TimeMenu.h"
 
-#include "TryFix.h"
-
 #include "Resources/MetaWatch_Large_16pt.h"
 #include "Resources/MetaWatch_Combined_8pt.h"
 
 #define MESSAGE_TIME_SETUP			0x0001
-
-#define MESSAGE_REPAIR	2
 
 MainMenu::MainMenu()
 {
@@ -36,13 +32,6 @@ MainMenu::MainMenu()
 	button->SetTarget(this);
 	button->SetMessage(MESSAGE_TIME_SETUP);
 	AddControl(button);
-
-	button = new Button();
-	button->SetFont(&MetaWatch_Combined_8pt);
-	button->SetText("LCD Repair");
-	button->SetTarget(this);
-	button->SetMessage(MESSAGE_REPAIR);
-	AddControl(button);
 }
 
 void MainMenu::OnMessage(unsigned short message, void *param)
@@ -54,9 +43,6 @@ void MainMenu::OnMessage(unsigned short message, void *param)
 			break;
 		case MESSAGE_TIME_SETUP:
 			Application::Push(new TimeMenu());
-			break;
-		case MESSAGE_REPAIR:
-			Application::Push(new TryFix());
 			break;
 	}
 }
