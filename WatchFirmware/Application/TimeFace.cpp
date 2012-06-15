@@ -63,6 +63,15 @@ void TimeFace::OnPaintAll(Bitmap *destination)
 
 	destination->FillRect(0, 0, w, h, false);
 
+	{
+		char buf[20];
+		GetDateString(buf);
+		MetaWatch_Small_8pt.Print(destination, 10, cy + 10, buf);
+
+		goodsprintf(buf, "%i:%2i:%2i", GetRTCHOUR(), GetRTCMIN(), GetRTCSEC());
+		MetaWatch_Small_8pt.Print(destination, 10, 10, buf);
+	}
+
 	int hour = GetRTCHOUR() % 12;
 	int minute = GetRTCMIN();
 	int second = GetRTCSEC();
@@ -109,25 +118,8 @@ bool TimeFace::AcceptLower(void)
 void TimeFace::DrawHand(Bitmap *destination, int cx, int cy, int length, Fixed degrees)
 {
 	Fixed fl = length;
-	{
-		char buf[20];
-		goodsprintf(buf, "%i, %i, %i, %F", cx, cy, (int)fl, degrees);
-		MetaWatch_Small_8pt.Print(destination, 10, 70, buf);
-	}
-//	destination->Line(0, 10, fl, 10, true);
-//	destination->Line(0, 12, degrees * Fixed(10), 12, true);
-//	destination->Line(40, 14, Fixed(40) + sine(degrees) * Fixed(40), 14, true);
-//	destination->Line(40, 16, Fixed(40) + cosine(degrees) * Fixed(40), 16, true);
 	int lx = Fixed(cx) + fl * sine(degrees);
 	int ly = Fixed(cy) - fl * cosine(degrees);
-//	destination->Line(cx, 18, cx + lx, 18, true);
-//	destination->Line(cy, 20, cy + ly, 20, true);
-//	{
-//		char buf[20];
-//		//goodsprintf(buf, "%i, %i, %i, %i", (int)lx, ly, (int)(sd * Fixed(100)), (int)(cosine(degrees) * Fixed(100)));
-//		goodsprintf(buf, "%F = %F * %F", lx, fl, sd);
-//		MetaWatch_Small_8pt.Print(destination, 10, 85, buf);
-//	}
 	destination->Line(cx, cy, lx, ly, true);
 }
 
