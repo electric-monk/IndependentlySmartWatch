@@ -5,6 +5,9 @@
 #include "macro.h"
 #include "Adc.h"
 #include "Timer.h"
+#include "colindebug.h"
+
+#include "FixedMaths.h"
 
 // As most stuff happens in an ISR, it's easier to use a static list than a linked list
 // (but certainly not impossible, if it's necessary in future)
@@ -17,6 +20,8 @@
 const double CONVERSION_FACTOR_BATTERY = ((24300.0+38300.0)*2.5*1000.0)/(4095.0*24300.0);
 const double CONVERSION_FACTOR =  2.5*10000.0/4096.0;
 
+#ifdef USE_FLOATING_POINT
+
 static unsigned int AdcCountsToBatteryVoltage(unsigned int Counts)
 {
 	return ((unsigned int)(CONVERSION_FACTOR_BATTERY*(double)Counts));
@@ -26,6 +31,35 @@ static unsigned int AdcCountsToVoltage(unsigned int Counts)
 {
 	return ((unsigned int)(CONVERSION_FACTOR*(double)Counts));
 }
+
+#else
+
+#ifdef ENABLE_FLOATS
+static const Fixed FIXED_CONVERSION_FACTOR_BATTERY(CONVERSION_FACTOR_BATTERY);
+static const Fixed FIXED_CONVERSION_FACTOR(CONVERSION_FACTOR);
+
+void ReportFixedAdcs(void)
+{
+#define REPORT(x, y)		goodprintf("static const Fixed " ## #x ## "(Fixed::RAW, %l);\t// %s = %F\n", x.Raw(), #y, x)
+	REPORT(FIXED_CONVERSION_FACTOR_BATTERY, CONVERSION_FACTOR_BATTERY);
+	REPORT(FIXED_CONVERSION_FACTOR, CONVERSION_FACTOR);
+}
+#else
+static const Fixed FIXED_CONVERSION_FACTOR_BATTERY(Fixed::RAW, 103070);	// CONVERSION_FACTOR_BATTERY = 1.57
+static const Fixed FIXED_CONVERSION_FACTOR(Fixed::RAW, 400000);	// CONVERSION_FACTOR = 6.10
+#endif
+
+static unsigned int AdcCountsToBatteryVoltage(unsigned int Counts)
+{
+	return (int)(Fixed((int)Counts) * FIXED_CONVERSION_FACTOR_BATTERY);
+}
+
+static unsigned int AdcCountsToVoltage(unsigned int Counts)
+{
+	return (int)(Fixed((int)Counts) * FIXED_CONVERSION_FACTOR);
+}
+
+#endif
 
 template<int count> class AdcAveraging
 {

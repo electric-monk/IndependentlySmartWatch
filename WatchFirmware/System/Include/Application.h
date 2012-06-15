@@ -34,15 +34,15 @@ public:
 
 protected:
 	virtual void OnMessage(unsigned short message, void *param);
-	virtual void OnShow(void);
-	virtual void OnHide(void);
+	virtual void OnShow(bool popping);
+	virtual void OnHide(bool popping);
 	virtual void OnButton(BUTTON_TYPE button, BUTTON_EVENT event);
 	virtual void OnPaint(Bitmap *destination);
 
 private:
 	static void MainTask(void*);
 
-	bool m_active;
+	bool m_active, m_paintpending;
 };
 
 #endif // __APPLICATION_H__

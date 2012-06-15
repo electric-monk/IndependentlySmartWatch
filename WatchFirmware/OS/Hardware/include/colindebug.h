@@ -1,5 +1,8 @@
 #ifndef __COLINDEBUG_H__
 #define __COLINDEBUG_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdio.h>
 #include "portmacro.h"
@@ -26,4 +29,7 @@ void goodsprintf(char *out, char *format, ...);
 
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

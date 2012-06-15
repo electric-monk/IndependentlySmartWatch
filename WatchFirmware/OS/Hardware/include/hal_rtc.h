@@ -74,6 +74,9 @@ int GetRTCPrescaleInterruptEnabled(void);
  */
 void halRtcGet(RTC_DATA* pRtcData);
 
+// Compute day of week (0=Sunday)
+int DayOfWeek(int Year, int Month, int Day);
+
 /* TI fix */
 extern int SetRTCYEAR(int year); 	
 extern int SetRTCMON(int month);

@@ -20,6 +20,9 @@ public:
 	void SetValueAt(int index, int value);
 	int ValueCount(void) { return m_count; }
 
+	int RangeValueAt(int index, int length);
+	void SetRangeValueAt(int index, int length, int value);
+
 	// For Control
 	void Paint(Bitmap *destination, int x, int y, int width, bool selected);
 	void OnPress(BUTTON_TYPE button);

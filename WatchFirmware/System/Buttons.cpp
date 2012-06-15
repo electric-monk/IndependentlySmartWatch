@@ -37,7 +37,7 @@ static int timerButtons(TimerHandle timer, void *context)
 			// Pressed
 			if (s_buttonStates[i].startTime != 0)
 			{
-				if ((s_buttonStates[i].startTime--) == 0)
+				if ((--s_buttonStates[i].startTime) == 0)
 					result |= Application::GenerateEvent((BUTTON_TYPE)i, beHold);
 			}
 			s_buttonStates[i].releaseTime = BUTTON_DEBOUNCE_COUNT / BUTTON_DEBOUNCE_COUNTER;

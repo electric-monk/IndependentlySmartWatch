@@ -7,6 +7,7 @@ Menu::Menu()
 	m_controls = NULL;
 	m_topView = NULL;
 	m_focus = NULL;
+	m_destination = FrameBuffer;
 }
 
 Menu::~Menu()

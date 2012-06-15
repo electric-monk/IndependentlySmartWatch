@@ -63,9 +63,9 @@ void Application::Push(Application *toShow)
 {
 	ENTER_CRITICAL_REGION_QUICK();
 	if (s_applicationStackLevel >= 0)
-		Application::Current()->Post(MSG_HIDE, NULL);
+		Application::Current()->Post(MSG_HIDE, (void*)false);
 	s_applicationStack[++s_applicationStackLevel] = toShow;
-	toShow->Post(MSG_SHOW, NULL);
+	toShow->Post(MSG_SHOW, (void*)false);
 	LEAVE_CRITICAL_REGION_QUICK();
 }
 
@@ -75,23 +75,25 @@ void Application::Pop(Application *toHide)
 	if (s_applicationStackLevel < 0)
 	{
 		// Error!
-		return;
+		goto failed;
 	}
 	if (s_applicationStack[s_applicationStackLevel] != toHide)
 	{
 		// Error!
-		return;
+		goto failed;
 	}
 	s_applicationStack[s_applicationStackLevel--] = NULL;
-	toHide->Post(MSG_HIDE, NULL);
+	toHide->Post(MSG_HIDE, (void*)true);
 	if (s_applicationStackLevel >= 0)
-		Application::Current()->Post(MSG_SHOW, NULL);
+		Application::Current()->Post(MSG_SHOW, (void*)true);
+failed:
 	LEAVE_CRITICAL_REGION_QUICK();
 }
 
 Application::Application()
 {
 	m_active = false;
+	m_paintpending = false;
 }
 
 Application::~Application()
@@ -104,6 +106,13 @@ void Application::Post(unsigned short message, void *param)
 	AppQueueItem packet;
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
+	if (message == MSG_PAINT)
+	{
+		if (m_paintpending)
+			return;
+		else
+			m_paintpending = true;
+	}
 	packet.message = message;
 	packet.target = this;
 	packet.parameter = param;
@@ -130,10 +139,10 @@ void Application::OnMessage(unsigned short message, void *param)
 	switch (message)
 	{
 		case MSG_SHOW:
-			OnShow();
+			OnShow((bool)param);
 			break;
 		case MSG_HIDE:
-			OnHide();
+			OnHide((bool)param);
 			break;
 		case MSG_BUTTON:
 		{
@@ -149,18 +158,19 @@ void Application::OnMessage(unsigned short message, void *param)
 				OnPaint(render);
 				render->End();
 			}
+			m_paintpending = false;
 			break;
 	}
 }
 
-void Application::OnShow(void)
+void Application::OnShow(bool popping)
 {
 	// Delay, in case any initialisation is needed?
 	m_active = true;
 	Post(MSG_PAINT, FrameBuffer);
 }
 
-void Application::OnHide(void)
+void Application::OnHide(bool popping)
 {
 	m_active = false;
 }

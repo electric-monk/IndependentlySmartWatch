@@ -1,10 +1,11 @@
 #include <stdarg.h>
+#include "FixedMaths.h"
 
 char goodprintfbuf[100];
 
-static void printint(char **out, unsigned int value, int precision)
+static void printint(char **out, unsigned long value, int precision)
 {
-	unsigned int msb = value / 10;
+	unsigned long msb = value / 10;
 	precision -= 1;
 	if (msb == 0)
 	{
@@ -21,10 +22,10 @@ static void printint(char **out, unsigned int value, int precision)
 	*((*out)++) = '0' + (value % 10);
 }
 
-static void printhex(char **out, unsigned int value, int precision)
+static void printhex(char **out, unsigned long value, int precision)
 {
 	const char *hexy = "0123456789ABCDEF";
-	unsigned int msb = value >> 8;
+	unsigned long msb = value >> 8;
 	precision -= 2;
 	if (msb == 0)
 	{
@@ -70,6 +71,17 @@ static void goodvsprintf(char *out, char *format, va_list params)
 					printint(&out, bob, precision);
 				}
 					break;
+				case 'l':
+				{
+					signed long bob = va_arg(params, signed long);
+					if (bob < 0)
+					{
+						*(out++) = '-';
+						bob = -bob;
+					}
+					printint(&out, bob, precision);
+				}
+					break;
 				case 'x':
 					printhex(&out, va_arg(params, unsigned int), precision);
 					break;
@@ -82,6 +94,22 @@ static void goodvsprintf(char *out, char *format, va_list params)
 					break;
 				case '%':
 					*(out++) = '%';
+					break;
+				case 'F':
+				{
+					Fixed f = va_arg(params, Fixed);
+					if (f < Fixed(0))
+					{
+						*(out++) = '-';
+						f = -f;
+					}
+					long i = (long)f;
+					f -= Fixed(i);
+					printint(&out, i, 1);
+					f *= Fixed(100);
+					*(out++) = '.';
+					printint(&out, (long)f, 2);
+				}
 					break;
 				default:
 					// Handle format info
@@ -107,7 +135,7 @@ static void goodvsprintf(char *out, char *format, va_list params)
 	*out = '\0';
 }
 
-void goodsprintf(char *out, char *format, ...)
+extern "C" void goodsprintf(char *out, char *format, ...)
 {
 	va_list params;
 

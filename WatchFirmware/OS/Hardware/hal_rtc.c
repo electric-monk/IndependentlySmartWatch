@@ -197,8 +197,12 @@ __interrupt void RTC_ISR(void)
   }
 }
 
+// From Wikipedia
+static const unsigned char t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
 
-/******************************************************************************/
-
-
-
+int DayOfWeek(int Year, int Month, int Day)
+{
+	if (Month < 3)
+		Year--;
+	return (Year + Year / 4 - Year / 100 + Year / 400 + t[Month - 1] + Day) % 7;
+}

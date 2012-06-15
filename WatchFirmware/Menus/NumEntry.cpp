@@ -45,6 +45,26 @@ void NumberEntry::SetValueAt(int index, int value)
 		Container()->Refresh(this);
 }
 
+int NumberEntry::RangeValueAt(int index, int length)
+{
+	int result;
+
+	for (result = 0; length != 0; length--, index++)
+	{
+		result *= 10;
+		result += ValueAt(index);
+	}
+	return result;
+}
+
+void NumberEntry::SetRangeValueAt(int index, int length, int value)
+{
+	for (index += length - 1; length != 0; length--, index--, value /= 10)
+		m_items[index].value = value % 10;
+	if (Container() != NULL)
+		Container()->Refresh(this);
+}
+
 void NumberEntry::Paint(Bitmap *destination, int x, int y, int width, bool selected)
 {
 	int totalWidth;
