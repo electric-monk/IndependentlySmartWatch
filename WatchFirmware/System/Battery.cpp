@@ -99,7 +99,7 @@ static int timerBattery(TimerHandle timer, void *context)
 	BATTERY_CHARGE_ENABLE();
 
 	// Fire off another timer, to wait a while
-	Timer_Create(timerChargingControl, NULL, 10, 0);
+	Timer_Create(timerChargingControl, NULL, 50, 0);
 
 	return 0;
 }
@@ -153,7 +153,12 @@ extern "C" Battery_State Battery_Status(void)
 	return s_currentState;
 }
 
-extern "C" unsigned int Battery_Voltage(void)
+extern "C" unsigned int Battery_MilliVoltage(void)
 {
 	return s_currentVoltage;
+}
+
+Fixed Battery_Voltage(void)
+{
+	return Fixed((long)s_currentVoltage) / Fixed(1000);
 }

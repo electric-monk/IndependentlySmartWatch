@@ -1,6 +1,7 @@
 #ifndef __BATTERY_H__
 #define __BATTERY_H__
 #ifdef __cplusplus
+#include "FixedMaths.h"
 extern "C" {
 #endif
 
@@ -32,9 +33,10 @@ Battery_Notify_Handle Battery_Register(Battery_Callback callback, unsigned int n
 void Battery_Unregister(Battery_Notify_Handle handle);
 
 Battery_State Battery_Status(void);
-unsigned int Battery_Voltage(void);
+unsigned int Battery_MilliVoltage(void);
 
 #ifdef __cplusplus
 }
+Fixed Battery_Voltage(void);
 #endif
 #endif

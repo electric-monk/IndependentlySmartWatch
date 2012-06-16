@@ -71,6 +71,8 @@ void main(void)
 
 	ConfigureHardware();
 
+	DisableRstPin();
+
 	InitialiseDMA();
 	InitializeRealTimeClock();
 	Adc_Initialise();
