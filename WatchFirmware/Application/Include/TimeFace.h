@@ -23,7 +23,13 @@ public:
 	bool AcceptLower(void);
 
 private:
-	void DrawHand(Bitmap *destination, int cx, int cy, int length, Fixed degrees);
+	typedef enum {
+		htHour,
+		htMinute,
+		htSecond,
+		htTick,
+	} HandType;
+	void DrawHand(Bitmap *destination, int cx, int cy, HandType hand, Fixed degrees);
 
 	static int TimerCallback(TimerHandle handle, void *context);
 
