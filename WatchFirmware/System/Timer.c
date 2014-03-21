@@ -86,7 +86,7 @@ int Timer_Interrupt(int prescale)
 
 // External API
 
-TimerHandle Timer_Create(TimerCallback callback, void *context, int delay, int repeats)
+TimerHandle Timer_Create(TimerCallback callback, void *context, TimerLength delay, int repeats)
 {
 	int i;
 	TIMER_ENTRY *entry;
@@ -111,7 +111,7 @@ TimerHandle Timer_Create(TimerCallback callback, void *context, int delay, int r
 	return entry;
 }
 
-void Timer_Reset(TimerHandle timer, int delay, int repeats)
+void Timer_Reset(TimerHandle timer, TimerLength delay, int repeats)
 {
 	unsigned long muldiv = delay;
 	muldiv *= RTC_TICKS_PER_SECOND;

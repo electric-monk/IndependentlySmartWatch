@@ -6,9 +6,10 @@ extern "C" {
 
 typedef void* TimerHandle;
 typedef int (*TimerCallback)(TimerHandle handle, void *context);
+typedef int TimerLength;	// Milliseconds
 
-TimerHandle Timer_Create(TimerCallback callback, void *context, int delay, int repeats);
-void Timer_Reset(TimerHandle timer, int delay, int repeats);
+TimerHandle Timer_Create(TimerCallback callback, void *context, TimerLength delay, int repeats);
+void Timer_Reset(TimerHandle timer, TimerLength delay, int repeats);
 void Timer_Change(TimerHandle timer, TimerCallback callback, void *context);
 void Timer_Destroy(TimerHandle timer);
 TimerCallback Timer_GetCallback(TimerHandle timer);

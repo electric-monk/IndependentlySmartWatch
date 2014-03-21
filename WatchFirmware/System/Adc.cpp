@@ -145,18 +145,18 @@ public:
 	static void Setup(void)
 	{
 		HARDWARE_CFG_SENSE_INIT();
-		Config();
+		AdcConversion<input, channel>::Config();
 	}
 
 	void Initiate(void)
 	{
 		HARDWARE_CFG_SENSE_ENABLE();
-		StartADC();
+		AdcConversion<input, channel>::StartADC();
 	}
 
 	unsigned int Complete(void)
 	{
-		unsigned int result = AdcCountsToVoltage(ReadADC());
+		unsigned int result = AdcCountsToVoltage(AdcConversion<input, channel>::ReadADC());
 		HARDWARE_CFG_SENSE_DISABLE();
 		return result;
 	}
@@ -168,18 +168,18 @@ public:
 	static void Setup(void)
 	{
 		BATTERY_SENSE_INIT();
-		Config();
+		AdcConversion<input, channel>::Config();
 	}
 
 	void Initiate(void)
 	{
 		BATTERY_SENSE_ENABLE();
-		StartADC();
+		AdcConversion<input, channel>::StartADC();
 	}
 
 	unsigned int Complete(void)
 	{
-		unsigned int result = AdcCountsToBatteryVoltage(ReadADC());
+		unsigned int result = AdcCountsToBatteryVoltage(AdcConversion<input, channel>::ReadADC());
 		BATTERY_SENSE_DISABLE();
 		if (QueryCalibrationValid())
 			result += GetBatteryCalibrationValue();
@@ -196,7 +196,7 @@ public:
 	static void Setup(void)
 	{
 		LIGHT_SENSE_INIT();
-		Config();
+		AdcConversion<input, channel>::Config();
 	}
 
 	void Initiate(void)
@@ -208,7 +208,7 @@ public:
 
 	unsigned int Complete(void)
 	{
-		unsigned int result = AdcCountsToVoltage(ReadADC());
+		unsigned int result = AdcCountsToVoltage(AdcConversion<input, channel>::ReadADC());
 		LIGHT_SENSOR_SHUTDOWN();
 		Average.AddSample(result);
 		return result;
